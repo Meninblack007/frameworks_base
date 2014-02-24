@@ -3704,6 +3704,12 @@ public final class Settings {
         public static final String ALLOW_LIGHTS = "allow_lights";
 
         /**
+         * Toast Animations
+         * @hide
+         */
+        public static final String TOAST_ANIMATION = "toast_animation";
+
+        /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *

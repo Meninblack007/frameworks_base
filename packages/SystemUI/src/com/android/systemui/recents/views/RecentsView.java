@@ -319,6 +319,7 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
                     params.gravity = Gravity.TOP | Gravity.LEFT;
                     break;
                 case Constants.DebugFlags.App.RECENTS_CLEAR_ALL_TOP_RIGHT:
+                default:
                     params.gravity = Gravity.TOP | Gravity.RIGHT;
                     break;
                 case Constants.DebugFlags.App.RECENTS_CLEAR_ALL_TOP_CENTER:
@@ -328,7 +329,6 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
                     params.gravity = Gravity.BOTTOM | Gravity.LEFT;
                     break;
                 case Constants.DebugFlags.App.RECENTS_CLEAR_ALL_BOTTOM_RIGHT:
-                default:
                     params.gravity = Gravity.BOTTOM | Gravity.RIGHT;
                     break;
                 case Constants.DebugFlags.App.RECENTS_CLEAR_ALL_BOTTOM_CENTER:

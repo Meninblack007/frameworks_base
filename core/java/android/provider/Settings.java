@@ -3584,13 +3584,7 @@ public final class Settings {
          */
         public static final String STATUS_BAR_CARRIER = "status_bar_carrier";
 
-        /**
-         * show clear all recents button
-         *  @hide
-         */
-        public static final String SHOW_CLEAR_ALL_RECENTS = "show_clear_all_recents";
-
-        /**
+         /*
          * custom carrier label. The value is
          * String.
          */

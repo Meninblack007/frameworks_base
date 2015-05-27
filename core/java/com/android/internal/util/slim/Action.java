@@ -375,11 +375,6 @@ public class Action {
                 com.android.internal.R.bool.config_showNavigationBar);
     }
 
-    public static boolean isNavBarDefault(Context context) {
-        return context.getResources().getBoolean(
-                com.android.internal.R.bool.config_showNavigationBar);
-    }
-
     public static boolean isActionKeyEvent(String action) {
         if (action.equals(ActionConstants.ACTION_HOME)
                 || action.equals(ActionConstants.ACTION_BACK)

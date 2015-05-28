@@ -1256,6 +1256,7 @@ public final class Settings {
             MOVED_TO_SECURE.add(Secure.WIFI_WATCHDOG_PING_COUNT);
             MOVED_TO_SECURE.add(Secure.WIFI_WATCHDOG_PING_DELAY_MS);
             MOVED_TO_SECURE.add(Secure.WIFI_WATCHDOG_PING_TIMEOUT_MS);
+            MOVED_TO_SECURE.add(Secure.VOLUME_LINK_NOTIFICATION);
 
             // At one time in System, then Global, but now back in Secure
             MOVED_TO_SECURE.add(Secure.INSTALL_NON_MARKET_APPS);
@@ -1367,6 +1368,43 @@ public final class Settings {
         /** @hide */
         public static void getNonLegacyMovedKeys(HashSet<String> outKeySet) {
             outKeySet.addAll(MOVED_TO_GLOBAL);
+        }
+
+        /**
+         * Look up a boolean in the database.
+         * @param resolver to access the database with
+         * @param name to look up in the table
+         * @param def Value to return if the setting is not defined.
+         * @return The setting's current value, or 'def' if it is not defined
+         * or not a valid boolean.
+         */
+        public static boolean getBoolean(ContentResolver cr, String name, boolean def) {
+            String v = getString(cr, name);
+            try {
+                if(v != null)
+                    return "1".equals(v);
+                else
+                    return def;
+            } catch (NumberFormatException e) {
+                return def;
+            }
+        }
+
+	/**
+         * Convenience function for updating a single settings value as a
+         * boolean. This will either create a new entry in the table if the
+         * given name does not exist, or modify the value of the existing row
+         * with that name. Note that internally setting values are always
+         * stored as strings, so this function converts the given value to a
+         * string before storing it.
+         *
+         * @param cr The ContentResolver to access.
+         * @param name The name of the setting to modify.
+         * @param value The new value for the setting.
+         * @return true if the value was set, false on database errors
+         */
+        public static boolean putBoolean(ContentResolver cr, String name, boolean value) {
+            return putString(cr, name, value ? "1" : "0");
         }
 
         /**
@@ -2215,6 +2253,28 @@ public final class Settings {
         public static final String DOZE_BRIGHTNESS = "doze_brightness";
 
         /**
+         * The keyboard brightness to be used while the screen is on.
+         * Valid value range is between 0 and {@link PowerManager#getMaximumKeyboardBrightness()}
+         * @hide
+         */
+        public static final String KEYBOARD_BRIGHTNESS = "keyboard_brightness";
+
+        /**
+         * The button brightness to be used while the screen is on or after a button press,
+         * depending on the value of {@link BUTTON_BACKLIGHT_TIMEOUT}.
+         * Valid value range is between 0 and {@link PowerManager#getMaximumButtonBrightness()}
+         * @hide
+         */
+        public static final String BUTTON_BRIGHTNESS = "button_brightness";
+
+        /**
+         * The time in ms to keep the button backlight on after pressing a button.
+         * A value of 0 will keep the buttons on for as long as the screen is on.
+         * @hide
+         */
+        public static final String BUTTON_BACKLIGHT_TIMEOUT = "button_backlight_timeout";
+
+        /**
          * Control whether the process CPU usage meter should be shown.
          *
          * @deprecated Use {@link Global#SHOW_PROCESSES} instead
@@ -3056,14 +3116,14 @@ public final class Settings {
         public static final String EGG_MODE = "egg_mode";
 
         /**
-         * Display style of the status bar battery information
-         * 0: Display the battery an icon in portrait mode
-         * 2: Display the battery as a full circle
-         * 3: Display the battery as a dotted circle
-         * 4: Hide the battery status information
-         * 5: Display the battery an icon in landscape mode
-         * 6: Display the battery as plain text
-         * default: 0
+         * Control the display of the action overflow button within app UI.
+         * 0 = use system default
+         * 1 = force on
+         * @hide
+         */
+        public static final String UI_OVERFLOW_BUTTON = "ui_overflow_button";
+
+        /**
          * @hide
          */
         public static final String STATUS_BAR_BATTERY_STYLE = "status_bar_battery_style";
@@ -3189,6 +3249,12 @@ public final class Settings {
          * @hide
          */
         public static final String KEYBOARD_ROTATION_TIMEOUT = "keyboard_rotation_timeout";
+
+        /**
+         * Whether the volume slider adjust sound is enabled. The value is
+         * boolean (1 or 0).
+         */
+        public static final String VOLUME_ADJUST_SOUND_ENABLED = "volume_adjust_sound_enabled";
 
         /**
          * Whether custom hardware key rebinding is enabled
@@ -3591,6 +3657,146 @@ public final class Settings {
         public static final String STATUS_BAR_CARRIER_COLOR = "status_bar_carrier_color";
 
         /**
+         * Color temperature of the display during the day
+         * @hide
+         */
+        public static final String DISPLAY_TEMPERATURE_DAY = "display_temperature_day";
+
+        /**
+         * Color temperature of the display at night
+         * @hide
+         */
+        public static final String DISPLAY_TEMPERATURE_NIGHT = "display_temperature_night";
+
+        /**
+         * Display color temperature adjustment mode, one of DAY (default), NIGHT, or AUTO.
+         * @hide
+         */
+        public static final String DISPLAY_TEMPERATURE_MODE = "display_temperature_mode";
+
+        /**
+         * Automatic outdoor mode
+         * @hide
+         */
+        public static final String DISPLAY_AUTO_OUTDOOR_MODE = "display_auto_outdoor_mode";
+
+        /**
+         * Use display power saving features such as CABC or CABL
+         * @hide
+         */
+        public static final String DISPLAY_LOW_POWER = "display_low_power";
+
+        /**
+         * Use color enhancement feature of display
+         * @hide
+         */
+        public static final String DISPLAY_COLOR_ENHANCE = "display_color_enhance";
+
+        /**
+         * Manual display color adjustments (RGB values as floats, separated by spaces)
+         * @hide
+         */
+        public static final String DISPLAY_COLOR_ADJUSTMENT = "display_color_adjustment";
+
+        /**
+         * Did we tell about how they can stop breaking their eyes?
+         * @hide
+         */
+        public static final String LIVE_DISPLAY_HINTED = "live_display_hinted";
+
+        /**
+         * Boolean value on whether to show weather in the statusbar
+         */
+        public static final String STATUS_BAR_SHOW_WEATHER = "status_bar_show_weather";
+
+        /**
+         * Whether the phone ringtone should be played in an increasing manner
+         * @hide
+         */
+        public static final String INCREASING_RING = "increasing_ring";
+
+        /**
+         * Start volume fraction for increasing ring volume
+         * @hide
+         */
+        public static final String INCREASING_RING_START_VOLUME = "increasing_ring_start_vol";
+
+        /**
+         * Ramp up time (seconds) for increasing ring
+         * @hide
+         */
+        public static final String INCREASING_RING_RAMP_UP_TIME = "increasing_ring_ramp_up_time";
+
+        /**
+         * Whether "None" mode will act as "Silent"
+         * Effectively allowing alarms to always use the alarm stream volume when true.
+         * @hide
+         */
+        public static final String NONE_IS_SILENT = "none_is_silent";
+
+        /**
+         * Whether the notification light will be allowed when in zen mode during downtime
+         * @hide
+         */
+        public static final String ALLOW_LIGHTS = "allow_lights";
+
+        /**
+         * Toast Animations
+         * @hide
+         */
+        public static final String TOAST_ANIMATION = "toast_animation";
+
+        /**
+         * ListView Animations
+         * 0 == None
+         * 1 == Wave (Left)
+         * 2 == Wave (Right)
+         * 3 == Scale
+         * 4 == Alpha
+         * 5 == Stack (Top)
+         * 6 == Stack (Bottom)
+         * 7 == Translate (Left)
+         * 8 == Translate (Right)
+         * @hide
+         */
+        public static final String LISTVIEW_ANIMATION = "listview_animation";
+
+        /**
+         * ListView Interpolators
+         * 0 == None
+         * 1 == accelerate_interpolator
+         * 2 == decelerate_interpolator
+         * 3 == accelerate_decelerate_interpolator
+         * 4 == anticipate_interpolator
+         * 5 == overshoot_interpolator
+         * 6 == anticipate_overshoot_interpolator
+         * 7 == bounce_interpolator
+         * @hide
+         */
+        public static final String LISTVIEW_INTERPOLATOR = "listview_interpolator";
+
+        /**
+         * AOKP Custom System Animations
+         * @hide
+         */
+        public static final String[] ACTIVITY_ANIMATION_CONTROLS = new String[] {
+                "activity_open",
+                "activity_close",
+                "task_open",
+                "task_close",
+                "task_to_front",
+                "task_to_back",
+                "wallpaper_open",
+                "wallpaper_close",
+                "wallpaper_intra_open",
+                "wallpaper_intra_close",
+                "task_open_behind",
+        };
+        public static final String ANIMATION_CONTROLS_DURATION = "animation_controls_duration";
+        public static final String ANIMATION_CONTROLS_EXIT_ONLY = "animation_controls_exit_only";
+        public static final String ANIMATION_CONTROLS_REVERSE_EXIT = "animation_controls_reverse_exit";
+
+        /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *
@@ -3646,6 +3852,7 @@ public final class Settings {
             TTY_MODE,
             SOUND_EFFECTS_ENABLED,
             HAPTIC_FEEDBACK_ENABLED,
+            VOLUME_ADJUST_SOUND_ENABLED,
             POWER_SOUNDS_ENABLED,       // moved to global
             DOCK_SOUNDS_ENABLED,        // moved to global
             LOCKSCREEN_SOUNDS_ENABLED,
@@ -3659,7 +3866,17 @@ public final class Settings {
             LOCK_TO_APP_ENABLED,
             NOTIFICATION_SOUND,
             STATUS_BAR_BATTERY_STYLE,
-            STATUS_BAR_SHOW_BATTERY_PERCENT
+            STATUS_BAR_SHOW_BATTERY_PERCENT,
+            DISPLAY_TEMPERATURE_NIGHT,
+            DISPLAY_TEMPERATURE_DAY,
+            DISPLAY_TEMPERATURE_MODE,
+            DISPLAY_AUTO_OUTDOOR_MODE,
+            LIVE_DISPLAY_HINTED,
+            NONE_IS_SILENT,
+            ALLOW_LIGHTS,
+            INCREASING_RING,
+            INCREASING_RING_START_VOLUME,
+            INCREASING_RING_RAMP_UP_TIME
         };
 
         /**
@@ -3670,6 +3887,7 @@ public final class Settings {
         public static final String[] CLONE_TO_MANAGED_PROFILE = {
             DATE_FORMAT,
             HAPTIC_FEEDBACK_ENABLED,
+            VOLUME_ADJUST_SOUND_ENABLED,
             SOUND_EFFECTS_ENABLED,
             TEXT_SHOW_PASSWORD,
             TIME_12_24
@@ -5922,6 +6140,20 @@ public final class Settings {
         public static final String QS_SHOW_BRIGHTNESS_SLIDER = "qs_show_brightness_slider";
 
         /**
+         * Enable launch actions for left/right lockscreen targets
+         * @hide
+         */
+        public static final String LOCKSCREEN_BOTTOM_SHORTCUTS = "lockscreen_bottom_shortcuts";
+
+        /**
+         * Stored color matrix for LiveDisplay. This is used to allow co-existence with
+         * display tuning done by DisplayAdjustmentUtils when hardware support isn't
+         * available.
+         * @hide
+         */
+        public static final String LIVE_DISPLAY_COLOR_MATRIX = "live_display_color_matrix";
+
+        /**
          * List of QS tile names
          * @hide
          */
@@ -5945,6 +6177,13 @@ public final class Settings {
          * @hide
          */
         public static final String QS_USE_FOUR_COLUMNS = "qs_use_four_columns";
+
+        /**
+         * Boolean value whether to link ringtone and notification volume
+         *
+         * @hide
+         */
+        public static final String VOLUME_LINK_NOTIFICATION = "volume_link_notification";
 
         /**
          * This are the settings to be backed up.

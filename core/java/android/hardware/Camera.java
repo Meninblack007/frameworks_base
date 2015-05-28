@@ -560,14 +560,16 @@ public class Camera {
     private void notifyTorch(boolean inUse) {
         IBinder b = ServiceManager.getService(Context.TORCH_SERVICE);
         ITorchService torchService = ITorchService.Stub.asInterface(b);
-        try {
-            if (inUse) {
-                torchService.onCameraOpened(mTorchToken, mCameraId);
-            } else {
-                torchService.onCameraClosed(mTorchToken, mCameraId);
+        if (torchService != null) {
+            try {
+                if (inUse) {
+                    torchService.onCameraOpened(mTorchToken, mCameraId);
+                } else {
+                    torchService.onCameraClosed(mTorchToken, mCameraId);
+                }
+            } catch (RemoteException e) {
+                // Ignore
             }
-        } catch (RemoteException e) {
-            // Ignore
         }
     }
 
@@ -3653,6 +3655,7 @@ public class Camera {
          * @see #getSceneMode()
          */
         public void setSceneMode(String value) {
+            if(getSupportedSceneModes() == null) return;
             set(KEY_SCENE_MODE, value);
         }
 
@@ -3690,6 +3693,7 @@ public class Camera {
          * @see #getFlashMode()
          */
         public void setFlashMode(String value) {
+	    if(getSupportedFlashModes() == null) return;
             set(KEY_FLASH_MODE, value);
         }
 

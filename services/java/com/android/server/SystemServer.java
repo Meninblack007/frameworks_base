@@ -651,7 +651,8 @@ public final class SystemServer {
                 }
             }
 
-            if (!disableNonCoreServices) {
+            if (!disableNonCoreServices &&
+                    mPackageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
                 try {
                     Slog.i(TAG, "TorchService");
                     ServiceManager.addService(Context.TORCH_SERVICE, new TorchService(context));
@@ -994,6 +995,15 @@ public final class SystemServer {
                     reportWtf("starting BackgroundDexOptService", e);
                 }
 
+            }
+
+            if (!disableNonCoreServices) {
+                try {
+                    Slog.i(TAG, "CmHardwareService");
+                    ServiceManager.addService(Context.CMHW_SERVICE, new CmHardwareService(context));
+                } catch (Throwable e) {
+                    reportWtf("starting CMHW Service", e);
+                }
             }
 
             mSystemServiceManager.startService(LauncherAppsService.class);

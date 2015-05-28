@@ -225,6 +225,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -4136,6 +4137,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         if (task.inRecents) {
             int taskIndex = mRecentTasks.indexOf(task);
             if (taskIndex >= 0) {
+                trimRecentBitmaps();
                 if (!isAffiliated) {
                     // Simple case: this is not an affiliated task, so we just move it to the front.
                     mRecentTasks.remove(taskIndex);
@@ -4225,6 +4227,16 @@ public final class ActivityManagerService extends ActivityManagerNative
         if (needAffiliationFix) {
             if (DEBUG_RECENTS) Slog.d(TAG, "addRecent: regrouping affiliations");
             cleanupRecentTasksLocked(task.userId);
+        }
+    }
+
+    void trimRecentBitmaps() {
+        int N = mRecentTasks.size();
+        for (int i = 0; i < N; i++) {
+            final TaskRecord tr = mRecentTasks.get(i);
+            if (i > MAX_RECENT_BITMAPS) {
+                tr.freeLastThumbnail();
+            }
         }
     }
 
@@ -7868,7 +7880,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             fos = mGrantFile.startWrite();
 
             XmlSerializer out = new FastXmlSerializer();
-            out.setOutput(fos, "utf-8");
+            out.setOutput(fos, StandardCharsets.UTF_8.name());
             out.startDocument(null, true);
             out.startTag(null, TAG_URI_GRANTS);
             for (UriPermission.Snapshot perm : persist) {
@@ -7903,7 +7915,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         try {
             fis = mGrantFile.openRead();
             final XmlPullParser in = Xml.newPullParser();
-            in.setInput(fis, null);
+            in.setInput(fis, StandardCharsets.UTF_8.name());
 
             int type;
             while ((type = in.next()) != END_DOCUMENT) {
@@ -10471,6 +10483,23 @@ public final class ActivityManagerService extends ActivityManagerNative
         synchronized (this) {
             mController = controller;
             Watchdog.getInstance().setActivityController(controller);
+
+            // linkToDeath to ensure ActivityManager.isUserAMonkey returns correct status.
+            if (controller != null) {
+
+                final IBinder.DeathRecipient death = new DeathRecipient() {
+                    @Override
+                    public void binderDied() {
+                        setActivityController(null);
+                    }
+                };
+
+                try {
+                    controller.asBinder().linkToDeath(death, 0);
+                } catch (RemoteException e) {
+                    Slog.w(TAG, "given controller IBinder is already dead.");
+                }
+            }
         }
     }
 

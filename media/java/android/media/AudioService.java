@@ -379,6 +379,9 @@ public class AudioService extends IAudioService.Stub {
             "STREAM_TTS"
     };
 
+    private boolean mLinkNotificationWithVolume;
+    private final boolean mVoiceCapable;
+
     private final AudioSystem.ErrorCallback mAudioSystemCallback = new AudioSystem.ErrorCallback() {
         public void onError(int error) {
             switch (error) {
@@ -571,8 +574,10 @@ public class AudioService extends IAudioService.Stub {
         mContentResolver = context.getContentResolver();
         mAppOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
 
-        if (mContext.getResources().getBoolean(
-                com.android.internal.R.bool.config_voice_capable)) {
+        mVoiceCapable = context.getResources().getBoolean(
+                            com.android.internal.R.bool.config_voice_capable);
+
+        if (mVoiceCapable) {
             mPlatformType = PLATFORM_VOICE;
         } else if (context.getPackageManager().hasSystemFeature(
                                                             PackageManager.FEATURE_LEANBACK)) {
@@ -644,6 +649,10 @@ public class AudioService extends IAudioService.Stub {
                 com.android.internal.R.bool.config_useMasterVolume);
         mMasterVolumeRamp = context.getResources().getIntArray(
                 com.android.internal.R.array.config_masterVolumeRamp);
+
+        // read this in before readPersistedSettings() because updateStreamVolumeAlias needs it
+        mLinkNotificationWithVolume = Settings.Secure.getInt(mContext.getContentResolver(),
+                Settings.Secure.VOLUME_LINK_NOTIFICATION, 1) == 1;
 
         // must be called before readPersistedSettings() which needs a valid mStreamVolumeAlias[]
         // array initialized by updateStreamVolumeAlias()
@@ -953,6 +962,13 @@ public class AudioService extends IAudioService.Stub {
         }
 
         mStreamVolumeAlias[AudioSystem.STREAM_DTMF] = dtmfStreamAlias;
+
+        if (mLinkNotificationWithVolume && mVoiceCapable) {
+            mStreamVolumeAlias[AudioSystem.STREAM_NOTIFICATION] = AudioSystem.STREAM_RING;
+        } else {
+            mStreamVolumeAlias[AudioSystem.STREAM_NOTIFICATION] = AudioSystem.STREAM_NOTIFICATION;
+        }
+
         if (updateVolumes) {
             mStreamStates[AudioSystem.STREAM_DTMF].setAllIndexes(mStreamStates[dtmfStreamAlias]);
             // apply stream mute states according to new value of mRingerModeAffectedStreams
@@ -1042,6 +1058,9 @@ public class AudioService extends IAudioService.Stub {
             mVolumeKeysControlMediaStream = Settings.System.getIntForUser(cr,
                     Settings.System.VOLUME_KEYS_CONTROL_MEDIA_STREAM, 0, UserHandle.USER_CURRENT) == 1;
         }
+
+        mLinkNotificationWithVolume = Settings.Secure.getInt(cr,
+                Settings.Secure.VOLUME_LINK_NOTIFICATION, 1) == 1;
 
         mMuteAffectedStreams = System.getIntForUser(cr,
                 System.MUTE_STREAMS_AFFECTED,
@@ -4614,7 +4633,9 @@ public class AudioService extends IAudioService.Stub {
         SettingsObserver() {
             super(new Handler());
             mContentResolver.registerContentObserver(Settings.System.getUriFor(
-                Settings.System.MODE_RINGER_STREAMS_AFFECTED), false, this);
+                    Settings.System.MODE_RINGER_STREAMS_AFFECTED), false, this);
+            mContentResolver.registerContentObserver(Settings.Secure.getUriFor(
+                    Settings.Secure.VOLUME_LINK_NOTIFICATION), false, this);
             mContentResolver.registerContentObserver(Settings.Global.getUriFor(
                 Settings.Global.DOCK_AUDIO_MEDIA_ENABLED), false, this);
             mContentResolver.registerContentObserver(Settings.System.getUriFor(
@@ -4653,6 +4674,14 @@ public class AudioService extends IAudioService.Stub {
                 } else if (uri.equals(Settings.Global.getUriFor(
                     Settings.Global.DOCK_AUDIO_MEDIA_ENABLED))) {
                     readDockAudioSettings(mContentResolver);
+                }
+
+                boolean linkNotificationWithVolume = Settings.Secure.getInt(mContentResolver,
+                        Settings.Secure.VOLUME_LINK_NOTIFICATION, 1) == 1;
+                if (linkNotificationWithVolume != mLinkNotificationWithVolume) {
+                    mLinkNotificationWithVolume = linkNotificationWithVolume;
+                    updateStreamVolumeAlias(true);
+                    createStreamStates();
                 }
             }
         }

@@ -117,6 +117,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -396,7 +397,7 @@ public class NotificationManagerService extends SystemService {
             try {
                 infile = mPolicyFile.openRead();
                 final XmlPullParser parser = Xml.newPullParser();
-                parser.setInput(infile, null);
+                parser.setInput(infile, StandardCharsets.UTF_8.name());
 
                 int type;
                 String tag;
@@ -454,7 +455,7 @@ public class NotificationManagerService extends SystemService {
 
             try {
                 final XmlSerializer out = new FastXmlSerializer();
-                out.setOutput(stream, "utf-8");
+                out.setOutput(stream, StandardCharsets.UTF_8.name());
                 out.startDocument(null, true);
                 out.startTag(null, TAG_BODY);
                 out.attribute(null, ATTR_VERSION, Integer.toString(DB_VERSION));
@@ -1042,6 +1043,8 @@ public class NotificationManagerService extends SystemService {
             mDisableNotificationEffects = true;
         }
         mZenModeHelper.readZenModeFromSetting();
+        mZenModeHelper.readSilentModeFromSetting();
+        mZenModeHelper.readLightsAllowedModeFromSetting();
         mInterruptionFilter = mZenModeHelper.getZenModeListenerInterruptionFilter();
 
         mUserProfiles.updateCache(getContext());
@@ -1733,7 +1736,8 @@ public class NotificationManagerService extends SystemService {
         if (mDisableNotificationEffects) {
             return "booleanState";
         }
-        if ((mListenerHints & HINT_HOST_DISABLE_EFFECTS) != 0) {
+        if ((mListenerHints & HINT_HOST_DISABLE_EFFECTS) != 0
+                && !mZenModeHelper.getIsNoneSilent()) {
             return "listenerHints";
         }
         if (mCallState != TelephonyManager.CALL_STATE_IDLE && !mZenModeHelper.isCall(record)) {
@@ -1919,6 +1923,9 @@ public class NotificationManagerService extends SystemService {
                 for (int i=0; i<N; i++) {
                     final NotificationRecord r = mNotificationList.get(i);
                     if (r.sbn.getPackageName().equals(pkg) && r.sbn.getUserId() == userId) {
+                        if (r.sbn.getId() == id && TextUtils.equals(r.sbn.getTag(), tag)) {
+                            break;  // Allow updating existing notification
+                        }
                         count++;
                         if (count >= MAX_PACKAGE_NOTIFICATIONS) {
                             Slog.e(TAG, "Package has already posted " + count
@@ -2343,8 +2350,9 @@ public class NotificationManagerService extends SystemService {
         // light
         // release the light
         boolean wasShowLights = mLights.remove(record.getKey());
-        final boolean aboveThresholdWithLight = aboveThreshold || isLedNotificationForcedOn(record);
-        if ((notification.flags & Notification.FLAG_SHOW_LIGHTS) != 0 && aboveThresholdWithLight) {
+        final boolean canInterruptWithLight = canInterrupt || isLedNotificationForcedOn(record)
+                || (!canInterrupt && mZenModeHelper.getAreLightsAllowed());
+        if ((notification.flags & Notification.FLAG_SHOW_LIGHTS) != 0 && canInterruptWithLight) {
             mLights.add(record.getKey());
             updateLightsLocked();
             if (mUseAttentionLight) {
@@ -3054,19 +3062,8 @@ public class NotificationManagerService extends SystemService {
         final int len = list.size();
         for (int i=0; i<len; i++) {
             NotificationRecord r = list.get(i);
-            if (!notificationMatchesUserId(r, userId) || r.sbn.getId() != id) {
-                continue;
-            }
-            if (tag == null) {
-                if (r.sbn.getTag() != null) {
-                    continue;
-                }
-            } else {
-                if (!tag.equals(r.sbn.getTag())) {
-                    continue;
-                }
-            }
-            if (r.sbn.getPackageName().equals(pkg)) {
+            if (notificationMatchesUserId(r, userId) && r.sbn.getId() == id &&
+                    TextUtils.equals(r.sbn.getTag(), tag) && r.sbn.getPackageName().equals(pkg)) {
                 return i;
             }
         }

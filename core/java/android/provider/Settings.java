@@ -2769,6 +2769,33 @@ public final class Settings {
         public static final String VIBRATE_WHEN_RINGING = "vibrate_when_ringing";
 
         /**
+         * Whether to show the battery bar
+         * @hide
+               */
+        public static final String STATUSBAR_BATTERY_BAR = "statusbar_battery_bar";
+
+        /**
+         * @hide
+         */
+        public static final String STATUSBAR_BATTERY_BAR_COLOR = "statusbar_battery_bar_color";
+
+        /**
+         * @hide
+         */
+        public static final String STATUSBAR_BATTERY_BAR_THICKNESS = "statusbar_battery_bar_thickness";
+
+        /**
+         * @hide
+         */
+        public static final String STATUSBAR_BATTERY_BAR_STYLE = "statusbar_battery_bar_style";
+
+        /**
+         * @hide
+         */
+        public static final String STATUSBAR_BATTERY_BAR_ANIMATE = "statusbar_battery_bar_animate";
+
+
+        /**
          * Whether the audible DTMF tones are played by the dialer when dialing. The value is
          * boolean (1 or 0).
          */
@@ -3740,6 +3767,35 @@ public final class Settings {
          */
         public static final String ALLOW_LIGHTS = "allow_lights";
 
+       /**
+	* Network traffic indicator, goes from least to greatest significant bitwise
+	* 0 = Display up-stream traffic if set
+	* 1 = Display down-stream traffic if set
+	* 2 = Show as Byte/s if set
+	* 16-31 = Refresh interval(ms) min: 250 max: 32750 default: 1000
+	* @hide
+	*/
+        public static final String NETWORK_TRAFFIC_STATE = "network_traffic_state";
+
+        /**
+         * Whether or not to hide the network traffic indicator when there is no activity
+         * @hide
+         */
+        public static final String NETWORK_TRAFFIC_AUTOHIDE = "network_traffic_autohide";
+
+        /**
+         * Network traffic inactivity threshold (default is 10 kBs)
+         * @hide
+         */
+        public static final String NETWORK_TRAFFIC_AUTOHIDE_THRESHOLD = "network_traffic_autohide_threshold";
+
+        /**
+         * Network stats Color style
+         * @hide
+         */
+
+        public static final String NETWORK_TRAFFIC_COLOR = "network_traffic_color";
+
         /**
          * Toast Animations
          * @hide
@@ -3795,6 +3851,13 @@ public final class Settings {
         public static final String ANIMATION_CONTROLS_DURATION = "animation_controls_duration";
         public static final String ANIMATION_CONTROLS_EXIT_ONLY = "animation_controls_exit_only";
         public static final String ANIMATION_CONTROLS_REVERSE_EXIT = "animation_controls_reverse_exit";
+
+        /**
+         * Network stats Color style
+         * @hide
+         */
+        public static final String NETWORK_TRAFFIC_HIDE_ARROW = "network_traffic_hide_arrow";
+
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings

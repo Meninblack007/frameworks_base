@@ -847,6 +847,7 @@ void _CompressedAsset::close(void)
  */
 const void* _CompressedAsset::getBuffer(bool)
 {
+    AutoMutex _l(mCompressedAssetLock);    
     if (mBuf != NULL)
         return mBuf;
     AutoMutex _l(sLock);

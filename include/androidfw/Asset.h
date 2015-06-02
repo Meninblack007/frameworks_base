@@ -273,7 +273,7 @@ class _CompressedAsset : public Asset {
 public:
     _CompressedAsset(void);
     virtual ~_CompressedAsset(void);
-
+    Mutex mCompressedAssetLock;
     /*
      * Use a piece of an already-open file.
      *

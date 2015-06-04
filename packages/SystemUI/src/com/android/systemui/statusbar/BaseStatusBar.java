@@ -2516,7 +2516,6 @@ public abstract class BaseStatusBar extends SystemUI implements
         return mStatusBarKeyguardViewManager.isSecure();
     }
 
-<<<<<<< HEAD
     Runnable mKillTask = new Runnable() {
         public void run() {
             try {

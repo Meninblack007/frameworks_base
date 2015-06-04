@@ -491,12 +491,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     Settings.System.HEADS_UP_SNOOZE_TIME),
                     false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
-<<<<<<< HEAD
                     Settings.System.PIE_CONTROLS), false, this,
                     UserHandle.USER_ALL);
-=======
-					Settings.System.STATUS_BAR_GREETING),
-                    false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.USE_SLIM_RECENTS),
                     false, this, UserHandle.USER_ALL);
@@ -506,7 +502,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.RECENT_CARD_TEXT_COLOR),
                     false, this, UserHandle.USER_ALL);
->>>>>>> 033cb92... Frameworks: Slim recent app screen
             update();
         }
 
